@@ -1,0 +1,255 @@
+#Question 4
+#import data
+
+data_a <- read.table("C:\\Users\\Aubrey Chen\\Desktop\\多元线性回归作业\\HW4-fibers.dat")
+apply(data_a,2,min)
+apply(data_a,2,sd)
+colnames(data_a) <- c("Y1","Y2","Y3","Y4","X1","X2","X3","X4")
+#(a) Multiple regression of each response variable
+ols_1 <- lm(Y1~X1+X2+X3+X4,data=data_a)
+summary(ols_1)
+ols_2 <- lm(Y2~X1+X2+X3+X4,data=data_a)
+summary(ols_2)
+ols_3 <- lm(Y3~X1+X2+X3+X4,data=data_a)
+summary(ols_3)
+ols_4 <- lm(Y4~X1+X2+X3+X4,data=data_a)
+summary(ols_4)
+sum(ols_1$residuals^2)
+ols_1$df.residual
+ols_1$coefficients
+rbind(1,matrix(1:4,ncol=1))
+ols_1$coefficients %*% rbind(1,matrix(1:4,ncol=1))
+#(c) predict
+new_X <- matrix(c(0.330,45.500,20.375,1.010),ncol=1)
+t_cut <- qt(0.975,nrow(Y)-5)
+precision_matrix <- solve(t(as.matrix(data_a[c("X1","X2","X3","X4")])) %*% as.matrix(data_a[c("X1","X2","X3","X4")]))
+
+#we've built a function to do the predict.
+pre_interval <- function(model,new_X,t_cut,precision_matrix)
+{
+  sse <- sum(model$residuals^2)
+  s <- sse / model$df.residual
+  coef_ <- model$coefficients
+  wait_for_pre_X <- as.matrix(rbind(1,new_X))
+  pre_value <- coef_ %*% wait_for_pre_X
+  mean_interval <- c(pre_value - t_cut*sqrt(s)*sqrt(t(new_X) %*% precision_matrix %*% new_X),
+                     pre_value + t_cut*sqrt(s)*sqrt(t(new_X) %*% precision_matrix %*% new_X))
+  pre_interval <- c(pre_value - t_cut*sqrt(s)*sqrt(1 + t(new_X) %*% precision_matrix %*% new_X),
+                    pre_value + t_cut*sqrt(s)*sqrt(1 + t(new_X) %*% precision_matrix %*% new_X))
+  result <- list(mean_interval, pre_interval)
+  names(result) <- c("mean_interval", "pre_interval")
+  return(result)
+}
+
+for(ols in list(ols_1,ols_2,ols_3,ols_4))
+{
+  this_pre_result <- pre_interval(ols,new_X,t_cut,precision_matrix)
+  print("the interval of mean value is")
+  print(this_pre_result$mean_interval)
+  print("the interval of predict value is")
+  print(this_pre_result$pre_interval)
+}
+
+#(b)
+ols_multi <- lm(cbind(data_a$Y1,data_a$Y2,data_a$Y3,data_a$Y4)~
+                  cbind(data_a$X1,data_a$X2,data_a$X3,data_a$X4),
+                data=data_a)
+summary(ols_multi)
+B_hat <- ols_multi$coefficients
+manova_result <- manova(ols_multi)
+summary(manova_result,test="Wilks")
+E_hat <- t(manova_result$residuals) %*% manova_result$residuals
+#Since no H_hat was derived directly, we design a new program to obtain the H_hat
+y_mean <- colMeans(cbind(data_a$Y1,data_a$Y2,data_a$Y3,data_a$Y4))
+Y <- cbind(data_a$Y1,data_a$Y2,data_a$Y3,data_a$Y4)
+H_hat <- t(Y)%*%Y - nrow(Y)*as.matrix(y_mean,ncol=1)%*%y_mean-E_hat
+Se <- E_hat /(nrow(Y)-4-1)
+
+#overall test
+summary(manova_result, test="Wilks")
+summary(manova_result, test="Pillai")
+summary(manova_result, test="Roy")
+summary(manova_result, test="Hotelling-Lawley")
+
+#predict under multivariate situation
+F_cut <- qf(0.95,ncol(Y),nrow(Y)-ncol(Y)-4)
+coef_of_F <- (nrow(Y)-ncol(Y)-1)*4/(nrow(Y)-ncol(Y)-4)
+diag(E_hat)[1] * t(new_X) %*% precision_matrix %*% new_X
+
+#Simultaneous prediction intervals
+#left
+t(as.matrix(B_hat[,1])) %*%  as.matrix(rbind(1,new_X)) - sqrt(coef_of_F*F_cut*diag(E_hat)[1] * t(new_X) %*% precision_matrix %*% new_X)
+
+for(i in 1:ncol(Y))
+{
+  beta_x0 <- t(as.matrix(B_hat[,i])) %*%  as.matrix(rbind(1,new_X))
+  right_sqrt <- sqrt(coef_of_F*F_cut*diag(E_hat)[i] * t(new_X) %*% precision_matrix %*% new_X)
+  right_sqrt_t <- t_cut*sqrt(diag(E_hat)[i] * t(new_X) %*% precision_matrix %*% new_X)
+  right_sqrt_1 <- sqrt(coef_of_F*F_cut*diag(E_hat)[i] *(1+ t(new_X) %*% precision_matrix %*% new_X))
+  right_sqrt_1_t <- t_cut*sqrt(diag(E_hat)[i] *(1+ t(new_X) %*% precision_matrix %*% new_X))
+  print(paste("The simultaneous confidence intervals of ",i,"th component of E(y0):"))
+  print(c(beta_x0-right_sqrt,beta_x0+right_sqrt))
+  print(paste("The confidence intervals of ",i,"th component of E(y0):"))
+  print(c(beta_x0-right_sqrt_t,beta_x0+right_sqrt_t))
+  print(paste("The simultaneous confidence intervals of ",i,"th component of y0:"))
+  print(c(beta_x0-right_sqrt_1,beta_x0+right_sqrt_1))
+  print(paste("The confidence intervals of ",i,"th component of y0:"))
+  print(c(beta_x0-right_sqrt_1_t,beta_x0+right_sqrt_1_t))
+}
+
+#(c)eclipse
+library(ggplot2)
+ols_multi_two <- lm(cbind(data_a$Y1,data_a$Y2)~
+                      cbind(data_a$X1,data_a$X2,data_a$X3,data_a$X4),
+                    data=data_a)
+B_hat_new <- ols_multi_two$coefficients
+E_hat_new <- t(ols_multi_two$residuals) %*% ols_multi_two$residuals
+
+Y_new <- cbind(data_a$Y1,data_a$Y2)
+mean_vec <- colMeans(Y_new)
+F_cut_new <- qf(0.95,ncol(Y_new),nrow(Y_new)-ncol(Y_new)-4)
+coef_of_F_new <- (nrow(Y_new)-5)*2/(nrow(Y_new)-2-4)
+#define useful functions for drawing a ellipse
+ellipse.simple <- function(s1, s2, c){
+  a <- s1*c
+  b <- s2*c
+  x <- seq(from = -a, to = a, length.out = 400)
+  points <- data.frame(
+    x1 = c(-x, x),
+    x2 = NA
+  )
+  points$x2[1:400] <- sqrt(((a*b)^2-(b*x)^2)/a^2)
+  points$x2[401:800] <- -sqrt(((a*b)^2-(b*x)^2)/a^2)
+  return(points)
+}
+ellipse.general <- function(mu, s, c){
+  lambda <- diag(eigen(s)$values)  # 特征值
+  P <- eigen(s)$vectors            # 特征向量
+  Y <- ellipse.simple(s1 = sqrt(lambda[1,1]), s2 = sqrt(lambda[2,2]), c = c)  # 中心在原点，没有倾斜的椭圆的坐标
+  X <- t(P%*%t(Y) + mu)  # 对坐标旋转位移
+  X <- as.data.frame(X)
+  colnames(X) <- c('x1', 'x2')
+  return(X)
+}
+x_XX_x <- t(as.matrix(colMeans(data_a[c("X1","X2","X3","X4")]))) %*% precision_matrix %*% as.matrix(colMeans(data_a[c("X1","X2","X3","X4")]))
+points_simultaneous_mean <- ellipse.general(mu=mean_vec,s=E_hat_new/(nrow(Y_new)-5),c=sqrt(coef_of_F_new*F_cut_new*x_XX_x[1]))
+points_simultaneous_pre <- ellipse.general(mu=mean_vec,s=E_hat_new/(nrow(Y_new)-5),c=sqrt((coef_of_F_new*F_cut_new+1)*x_XX_x[1]))
+points_ <- cbind(points_simultaneous_mean,points_simultaneous_pre)
+colnames(points_) <- c("x1","x2","y1","y2")
+#plots by using classic R method
+plot(points_simultaneous_mean,xlim=c(21.1,22.4),ylim=c(7.1,7.4),col="RosyBrown",pch=16,lty=1,
+     cex.axis=0.7,cex.lab=0.7)
+points(points_simultaneous_pre,col="DarkTurquoise",pch=16)
+points(mean_vec,col="DeepPink",pch=16)
+legend(22.1,7.2,c("E(y0)","y0"),col=c("RosyBrown","DarkTurquoise"),
+       text.col=c("RosyBrown","DarkTurquoise"),
+       pch=c(16,16),cex=0.9)
+#plots by using ggplot2
+p_point <- ggplot(points_) +
+  geom_point(aes(x=points_[,1],y=points_[,2]),color="RosyBrown")+
+  geom_point(aes(x=points_[,3],y=points_[,4]),color="DarkTurquoise")+
+  xlab("y1")+
+  ylab("y2")+
+  annotate(geom="text",x=21.40,y=7.33,label="Ellipse of y0",fontface="bold",size=4) +
+  annotate(geom="segment",x=21.40,xend=21.50,y=7.32,yend=7.30,arrow=arrow(length=unit(0.3,"cm")))+
+  annotate(geom="text",x=21.65,y=7.25,label="Ellipse of E(y0)",fontface="bold",size=4)+
+  annotate(geom="segment",x=21.65,xend=21.50,y=7.26,yend=7.285,arrow=arrow(length=unit(0.3,"cm")))
+p_point
+
+#Question 5
+#import the data you need
+data_b <- read.table("C:\\Users\\Aubrey Chen\\Desktop\\多元线性回归作业\\HW4-gpa-gmat.DAT")
+data_b$V3 <- as.factor(data_b$V3)
+#(a)
+group_1 <- data_b[data_b$V3==1,]
+group_2 <- data_b[data_b$V3==2,]
+group_3 <- data_b[data_b$V3==3,]
+total_mean_vec <- colMeans(data_b[,c(1,2)])
+group_1_mean <- colMeans(group_1[,c(1,2)])
+group_2_mean <- colMeans(group_2[,c(1,2)])
+group_3_mean <- colMeans(group_3[,c(1,2)])
+group_1_cov <- cov(group_1[,c(1,2)])
+group_2_cov <- cov(group_2[,c(1,2)])
+group_3_cov <- cov(group_3[,c(1,2)])
+S_pl <- (((nrow(group_1)-1)*group_1_cov + (nrow(group_2)-1)*group_2_cov + (nrow(group_3)-1)*group_3_cov)/(nrow(data_b)-3))
+
+#b
+ggplot(data_b,aes(x=V1,y=V2,colour=V3))+
+  geom_point()+
+  xlab("GPA")+
+  ylab("GMAT")+ labs(colour="group")
+
+#(c)
+W <- S_pl*(nrow(data_b)-3)
+B <- (group_1_mean - total_mean_vec) %*% t(group_1_mean - total_mean_vec) +
+     (group_2_mean - total_mean_vec) %*% t(group_2_mean - total_mean_vec) +
+     (group_3_mean - total_mean_vec) %*% t(group_3_mean - total_mean_vec)
+eigen_values <- eigen(solve(W)%*%B)$values
+percentage <- eigen_values[1]/sum(eigen_values)
+#Since the first eigenvalue is large enough, we only use the first discriminant function.
+eigen_vectors <- eigen(solve(W)%*%B)$vectors
+z_1 <- c(eigen_vectors[,1] %*% group_1_mean,eigen_vectors[,2] %*% group_1_mean)
+z_2 <- c(eigen_vectors[,1] %*% group_2_mean,eigen_vectors[,2] %*% group_2_mean)
+z_3 <- c(eigen_vectors[,1] %*% group_3_mean,eigen_vectors[,2] %*% group_3_mean)
+
+
+new_data_b <- matrix(0,nrow=nrow(data_b),ncol=3)
+for(i in 1:nrow(data_b))
+{
+  this_row <- data_b[i,c(1,2)]
+  new_z1 <- as.matrix(this_row) %*% eigen_vectors[,1]
+  new_z2 <- as.matrix(this_row) %*% eigen_vectors[,2]
+  label <- data_b[i,c(3)]
+  new_data_b[i,1]=new_z1
+  new_data_b[i,2]=new_z2
+  new_data_b[i,3]=label
+}
+new_data_b_df <- data.frame(new_data_b)
+new_data_b_df$X3 <- as.factor(new_data_b_df$X3)
+ggplot(new_data_b_df,aes(x=X1,y=X2,colour=X3))+
+  geom_point()+
+  xlab("z1")+
+  ylab("z2")+ labs(colour="group")+
+  geom_vline(xintercept=3.55,lty=2,cex=1.1) + geom_vline(xintercept=4.0,lty=2,cex=1.1)
+
+#(d)The goal is equal to maximize the posterior probability
+#record the prior probabilities
+p_1 <- 0.3;p_2 <- 0.6;p_3 <- 0.1
+new_ob <- c(3.21,497)
+p1_f1 <- p_1*(1/sqrt(2*pi*det(group_1_cov)))*exp(-(1/2)*t(new_ob-group_1_mean)
+                                             %*%solve(group_1_cov)
+                                             %*%(new_ob-group_1_mean))
+p2_f2 <- p_2*(1/sqrt(2*pi*det(group_2_cov)))*exp(-(1/2)*t(new_ob-group_2_mean)
+                                             %*%solve(group_2_cov)
+                                             %*%(new_ob-group_2_mean))
+p3_f3 <- p_3*(1/sqrt(2*pi*det(group_3_cov)))*exp(-(1/2)*t(new_ob-group_3_mean)
+                                            %*%solve(group_3_cov)
+                                            %*%(new_ob-group_3_mean))
+print(paste(p1_f1,p2_f2,p3_f3))
+print(paste(p1_f1/(p1_f1+p2_f2+p3_f3),p2_f2/(p1_f1+p2_f2+p3_f3),p3_f3/(p1_f1+p2_f2+p3_f3)))
+
+#if the covariance matrix is the same
+p1_f1_ <- p_1*(1/sqrt(2*pi*det(S_pl)))*exp(-(1/2)*t(new_ob-group_1_mean)
+                                                 %*%solve(S_pl)
+                                                 %*%(new_ob-group_1_mean))
+p2_f2_ <- p_2*(1/sqrt(2*pi*det(S_pl)))*exp(-(1/2)*t(new_ob-group_2_mean)
+                                                 %*%solve(S_pl)
+                                                 %*%(new_ob-group_2_mean))
+p3_f3_ <- p_3*(1/sqrt(2*pi*det(S_pl)))*exp(-(1/2)*t(new_ob-group_3_mean)
+                                                 %*%solve(S_pl)
+                                                 %*%(new_ob-group_3_mean))
+print("the posterior probabilities are")
+print(paste(p1_f1_/(p1_f1_+p2_f2_+p3_f3_),p2_f2_/(p1_f1_+p2_f2_+p3_f3_),p3_f3_/(p1_f1_+p2_f2_+p3_f3_)))
+
+#(e)
+library(MASS)
+lda_ <- lda(V3~V1+V2,data=data_b,prior=c(3,6,1)/10)
+
+new_ob_df <- data.frame(t(new_ob))
+colnames(new_ob_df) <- c("V1","V2")
+predicted_class <- predict(lda_,new_ob_df)$class
+print(predict(lda_,new_ob_df)$posterior)
+f1<-exp(-(1/2)*t(new_ob-group_1_mean)%*%solve(group_1_cov)%*%(new_ob-group_1_mean))
+f2<-exp(-(1/2)*t(new_ob-group_2_mean)%*%solve(group_2_cov)%*%(new_ob-group_2_mean))
+f3<-exp(-(1/2)*t(new_ob-group_3_mean)%*%solve(group_3_cov)%*%(new_ob-group_3_mean))
+

@@ -1,0 +1,10 @@
+Package: cyz
+Type: Package
+Title: A logistic model written by yourself (Title Case)
+Version: 1.0.0
+Author: Yongzhou Chen
+Maintainer: Yongzhou Chen <cyz446453565@sjtu.edu.cn>
+Description: A logistic model written by yourself. Moreover, a LOO has also been provided.
+License: GNU
+Encoding: UTF-8
+LazyData: true

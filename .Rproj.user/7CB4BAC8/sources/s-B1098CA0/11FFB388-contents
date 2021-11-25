@@ -1,0 +1,77 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{amsmath} 
+\usepackage{fontspec}
+\usepackage{booktabs}
+\usepackage{graphicx}
+
+\setmainfont{Cambria}
+\title{\textbf{Assignment4}}
+\author{\textbf{name}:Chen Yongzhou\\ \textbf{StudentID}:121071910007\\Shanghai Jiaotong University}
+\date{}
+
+\begin{document}
+	\par
+	\par
+	\par
+	\maketitle
+	\large
+	\clearpage
+	\section{}  %The first question
+	It is acknowledged that
+	$$cor(\textbf{y},\hat{\textbf{y}})=\frac{(\textbf{y}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})}{\sqrt{(\textbf{y}-\bar{\textbf{y}})^T(\textbf{y}-\bar{\textbf{y}})(\hat{\textbf{y}}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})}}$$ 
+	Where 
+	$$(\textbf{y}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}}) = (\textbf{y}-\hat{\textbf{y}}+\hat{\textbf{y}}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})=(\textbf{y}-\hat{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})+(\hat{\textbf{y}}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}}).$$
+	And
+	$$(\textbf{y}-\hat{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})=\hat{\textbf{e}}^T(\hat{\textbf{y}}-\bar{\textbf{y}})=\textbf{0}.$$
+	Therefore, we have
+	$$cor(\textbf{y},\hat{\textbf{y}})=\frac{\sqrt{(\hat{\textbf{y}}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})}}{\sqrt{(\textbf{y}-\bar{\textbf{y}})^T(\textbf{y}-\bar{\textbf{y}})}}$$
+	Apart from that, we have the definition of determinant coefficients $R^2$ as
+	$$R^2=\frac{SSR}{SST}=\frac{(\hat{\textbf{y}}-\bar{\textbf{y}})^T(\hat{\textbf{y}}-\bar{\textbf{y}})}{(\textbf{y}-\bar{\textbf{y}})^T(\textbf{y}-\bar{\textbf{y}})}$$
+	Then we can conclude that
+	$$R^2=\left(cor(\textbf{y},\hat{\textbf{y}})\right)^2$$
+	
+	\section{} % The second question
+	\subsection{a}
+	According to the definition of Fisher's Linear discriminant function, we should calculate the mean vectors of $\textbf{Y}_1$ and $\textbf{Y}_2$ respectively as well as the sample variances $\textbf{S}_{pl}$. Then we have:
+	$$\bar{\textbf{y}_1}=\left(\begin{matrix} 3 \\ 6 \end{matrix}\right) , \bar{\textbf{y}_2}=\left(\begin{matrix} 5 \\ 8 \end{matrix}\right) $$
+	$$\textbf{S}_{pl} = \left(\begin{matrix} 1 & 1 \\ 1 & 2 \end{matrix}\right)$$
+	$$\textbf{S}_{pl}^{-1} =  \left(\begin{matrix} 2 & -1 \\ -1 & 1 \end{matrix}\right) $$
+	Then Linear discriminant function can be obtained as
+	$$\textbf{z}_i = \boldsymbol{\alpha}^T\textbf{y}_i,\boldsymbol{\alpha}=\textbf{S}_{pl}^{-1}(\bar{\textbf{y}_1}-\bar{\textbf{y}_2})=\left(\begin{matrix} -2 \\ 0 \end{matrix}\right)$$
+
+	\subsection{b}
+	Firstly, we have
+	$\textbf{z}_0 = \boldsymbol{\alpha}^T\textbf{y}_0 = -4 $. Apart from that, we have $\textbf{z}_1 = \boldsymbol{\alpha}^T\bar{\textbf{y}}_1 = -6, \textbf{z}_2 = \boldsymbol{\alpha}^T\bar{\textbf{y}}_2 = -10$. It can be observed that $\textbf{y}_0$ is closer to $\textbf{z}_1$ compared with the distance of $\textbf{z}_0$ and $\textbf{z}_2$. So that the new observation $\textbf{z}_0$ should be classified as a member of group 1, namely the $\pi_1$.
+
+	\section{}
+	\subsection{a}
+	$TPM=Pr(h(\textbf{y})\neq L)\\
+	=Pr(h(\textbf{y})=1,L=2)+Pr(h(\textbf{y})=2,L=1)\\
+	=Pr(h(\textbf{y})=1|L=2)p_2 + Pr(h(\textbf{y})=2|L=1)p_1\\
+	=p_2\int_{R1} f_2(\textbf{y})d\textbf{y}+p_1\int_{R2} f_1(\textbf{y})d\textbf{y}\\
+	=p_2\int_{R1} f_2(\textbf{y})d\textbf{y}+p_1\int_{\Omega-R1} f_1(\textbf{y})d\textbf{y}\\
+	=p_1 + \int_{R1} \left[p_2 f_2(\textbf{y}) - p_1 f_1(\textbf{y})\right] d\textbf{y}$.\par
+	In order to minimize $TPM$, it is expected that the $ p_2 f_2(\textbf{y}) - p_1 f_1(\textbf{y})$ should be negative, namely smaller than zero. Then $R_1$ can be successfully obtained as:
+	$$R_1: \frac{f_1(\textbf{y})}{f_2(\textbf{y})} > \frac{p_2}{p_1}$$
+	Similarly, $R_2$ can be written as
+	$$R_2: \frac{f_1(\textbf{y})}{f_2(\textbf{y})} \leq \frac{p_2}{p_1}$$
+	When equality holds, the new observation can be classified as either in group 1 or in group 2.
+
+	\subsection{b}
+	As $p_1 = p_2$ we have $p_1=p_2=\frac{1}{2}$. And in question a, we have gotten the $R_1$ as 
+	$$R_1: \frac{f_1(\textbf{y})}{f_2(\textbf{y})} > \frac{p_2}{p_1}=1$$
+	By using logarithm, then we have
+	$$ ln \left(\frac{f_1(\textbf{y})}{f_2(\textbf{y})}\right) > 0$$
+	Since we've assumed the distributions of $f_1(\textbf{y})$ and $f_2(\textbf{y})$, then
+	$$ ln \left(\frac{f_1(\textbf{y})}{f_2(\textbf{y})}\right) = \frac{1}{2}\left[(\textbf{y}-\boldsymbol{\mu}_2)^T\boldsymbol{\Sigma}^{-1}(\textbf{y}-\boldsymbol{\mu}_2) - (\textbf{y}-\boldsymbol{\mu}_1)^T\boldsymbol{\Sigma}^{-1}(\textbf{y}-\boldsymbol{\mu}_1)\right]>0$$
+	Then we have
+	$$R_1 : \textbf{y}>\frac{1}{2}(\boldsymbol{\mu_1}+\boldsymbol{\mu_2}),R_2 : \textbf{y}\leq\frac{1}{2}(\boldsymbol{\mu_1}+\boldsymbol{\mu_2})$$
+	As we've known the $R_1$ and $R_2$, we can write the $TPM$ as
+	$$TPM = \frac{1}{2}\int_{\frac{1}{2}(\boldsymbol{\mu}_1+\boldsymbol{\mu}_2)}^{+\infty}f_2(\textbf{y})d\textbf{y} +  \frac{1}{2}\int_{-\infty}^{\frac{1}{2}(\boldsymbol{\mu}_1+\boldsymbol{\mu}_2)}f_1(\textbf{y})d\textbf{y}$$		
+	$$=\frac{1}{2}\int_{\frac{1}{2}\boldsymbol{\Sigma}^{-\frac{1}{2}}(\boldsymbol{\mu}_1-\boldsymbol{\mu}_2)}^{+\infty}\frac{1}{\sqrt{2\pi}}e^{-\frac{1}{2}\textbf{u}_2^T\textbf{u}_2}    d\textbf{u}_2 + \frac{1}{2}\int_{-\infty}^{\frac{1}{2}\boldsymbol{\Sigma}^{-\frac{1}{2}}(\boldsymbol{\mu}_2-\boldsymbol{\mu}_1)}\frac{1}{\sqrt{2\pi}}e^{-\frac{1}{2}\textbf{u}_1^T\textbf{u}_1}    d\textbf{u}_1 $$
+	Where $\textbf{u}_1$ and $\textbf{u}_2$ are standardized vectors respectively.\par
+	\noindent Then we can get
+	$$TPM = -\frac{1}{2}\int_{\frac{1}{2}\boldsymbol{\Sigma}^{-\frac{1}{2}}(\boldsymbol{\mu}_2-\boldsymbol{\mu}_1)}^{-\infty}\frac{1}{\sqrt{2\pi}}e^{-\frac{1}{2}\textbf{u}_2^T\textbf{u}_2}    d\textbf{u}_2 + \frac{1}{2}\int_{-\infty}^{\frac{1}{2}\boldsymbol{\Sigma}^{-\frac{1}{2}}(\boldsymbol{\mu}_2-\boldsymbol{\mu}_1)}\frac{1}{\sqrt{2\pi}}e^{-\frac{1}{2}\textbf{u}_1^T\textbf{u}_1}    d\textbf{u}_1 $$ $$= \int_{-\infty}^{\frac{1}{2}\boldsymbol{\Sigma}^{-\frac{1}{2}}(\boldsymbol{\mu}_2-\boldsymbol{\mu}_1)}\frac{1}{\sqrt{2\pi}}e^{-\frac{1}{2}\textbf{u}_1^T\textbf{u}_1}    d\textbf{u}_1 = \Phi\left(-\frac{\Delta^2}{2}\right)$$
+
+\end{document}
